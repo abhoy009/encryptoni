@@ -1,5 +1,7 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -g -Wall -I. -Isrc/app/encryptDecrypt -Isrc/app/fileHandling -Isrc/app/processes
+OPENSSL_PREFIX = $(shell brew --prefix openssl@3 2>/dev/null || echo "/opt/homebrew/opt/openssl")
+CXXFLAGS = -std=c++17 -g -Wall -I. -Isrc/app/encryptDecrypt -Isrc/app/fileHandling -Isrc/app/processes -I$(OPENSSL_PREFIX)/include
+LDFLAGS = -L$(OPENSSL_PREFIX)/lib -lcrypto
 
 MAIN_TARGET = encrypt_decrypt
 CRYPTION_TARGET = cryption
@@ -21,10 +23,10 @@ CRYPTION_OBJ = $(CRYPTION_SRC:.cpp=.o)
 all: $(MAIN_TARGET) $(CRYPTION_TARGET)
 
 $(MAIN_TARGET): $(MAIN_OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 $(CRYPTION_TARGET): $(CRYPTION_OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

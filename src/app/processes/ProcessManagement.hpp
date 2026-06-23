@@ -5,12 +5,18 @@
 #include <queue>
 #include <memory>
 
+enum class ExecutionMode {
+    SERIAL,
+    MULTIPROCESSING,
+    MULTITHREADING
+};
+
 class ProcessManagement
 {
 public:
     ProcessManagement();
     bool submitToQueue(std::unique_ptr<Task> task);
-    void executeTasks();
+    void executeTasks(ExecutionMode mode);
 
 private:
     std::queue<std::unique_ptr<Task>> taskQueue;
