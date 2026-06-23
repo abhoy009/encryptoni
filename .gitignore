@@ -1,1 +1,16 @@
+# Build targets
+encrypt_decrypt
+cryption
+
+# Object files
+*.o
+
+# Temporary files
+*.tmp_enc
+*.tmp_dec
+
+# Environment / Sensitive files
+.env
+
+# OS files
 .DS_Store
