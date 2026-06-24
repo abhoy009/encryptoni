@@ -3,9 +3,7 @@ class Encryptoni < Formula
   homepage "https://github.com/abhoy009/encryptoni"
   url "https://github.com/abhoy009/encryptoni/archive/refs/tags/v#{version}.tar.gz"
   version "1.0.0"
-  # Run `brew fetch --build-from-source encryptoni` after tagging to get the real hash:
-  #   curl -sL https://github.com/abhoy009/encryptoni/archive/refs/tags/v1.0.0.tar.gz | shasum -a 256
-  sha256 "61ea82539f078c245858782ecf870565b5e4218ae95d02d90107fc9ffac9c3bd"
+  sha256 "8b278bdbeaf49376f71910013d9a34b30a537ac1015980e33ea138087ad1c9f3"
   license "MIT"
   head "https://github.com/abhoy009/encryptoni.git", branch: "main"
 
