@@ -5,7 +5,7 @@ class Encryptoni < Formula
   version "1.0.0"
   # Run `brew fetch --build-from-source encryptoni` after tagging to get the real hash:
   #   curl -sL https://github.com/abhoy009/encryptoni/archive/refs/tags/v1.0.0.tar.gz | shasum -a 256
-  sha256 "TODO_SHA256_REPLACE_AFTER_TAGGING"
+  sha256 "61ea82539f078c245858782ecf870565b5e4218ae95d02d90107fc9ffac9c3bd"
   license "MIT"
   head "https://github.com/abhoy009/encryptoni.git", branch: "main"
 
