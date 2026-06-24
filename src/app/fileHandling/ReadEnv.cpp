@@ -3,10 +3,16 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
 class ReadEnv{
     public:
         std::string getenv(){
+            const char* envPass = std::getenv("ENCRYPTONI_PASSWORD");
+            if (envPass != nullptr && envPass[0] != '\0') {
+                return std::string(envPass);
+            }
+
             std::string env_path = ".env";
             IO io(env_path);
             std::fstream f_stream = io.getFileStream();

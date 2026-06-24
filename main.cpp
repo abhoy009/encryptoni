@@ -1,23 +1,67 @@
 #include <iostream>
 #include <filesystem>
+#include <getopt.h>
+#include <cstdlib>
 #include "./src/app/processes/ProcessManagement.hpp"
 #include "./src/app/processes/Task.hpp"
 
 namespace fs = std::filesystem;
 
+void printUsage() {
+    std::cout << "Usage: ./encrypt_decrypt <directory> --action <encrypt|decrypt> [--mode <serial|fork|thread>] [--password <pass>]\n";
+}
+
 int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        printUsage();
+        return 0;
+    }
+
     std::string directory;
     std::string action;
-    std::string modeStr;
+    std::string modeStr = "serial";
 
-    std::cout << "Enter the directory path: ";
-    std::getline(std::cin, directory);
+    static struct option long_options[] = {
+        {"action", required_argument, 0, 'a'},
+        {"mode", required_argument, 0, 'm'},
+        {"password", required_argument, 0, 'p'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
+    };
 
-    std::cout << "Enter the action (encrypt/decrypt): ";
-    std::getline(std::cin, action);
+    int opt;
+    int option_index = 0;
+    while ((opt = getopt_long(argc, argv, "a:m:p:h", long_options, &option_index)) != -1) {
+        switch (opt) {
+            case 'a':
+                action = optarg;
+                break;
+            case 'm':
+                modeStr = optarg;
+                break;
+            case 'p':
+                setenv("ENCRYPTONI_PASSWORD", optarg, 1);
+                break;
+            case 'h':
+            default:
+                printUsage();
+                return 0;
+        }
+    }
 
-    std::cout << "Enter the execution mode (serial/fork/thread): ";
-    std::getline(std::cin, modeStr);
+    if (optind < argc) {
+        directory = argv[optind];
+    } else {
+        std::cerr << "Error: Directory path is required.\n";
+        printUsage();
+        return 1;
+    }
+
+    if (action != "encrypt" && action != "decrypt") {
+        std::cerr << "Error: Action must be either 'encrypt' or 'decrypt'.\n";
+        printUsage();
+        return 1;
+    }
 
     ExecutionMode mode = ExecutionMode::SERIAL;
     if (modeStr == "fork" || modeStr == "process" || modeStr == "multiprocessing") {
