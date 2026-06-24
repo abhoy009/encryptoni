@@ -112,7 +112,6 @@ export default function TerminalDemo() {
               fontSize: '0.8125rem',
               fontWeight: activeTab === tab ? 500 : 400,
               color: activeTab === tab ? 'var(--accent)' : 'rgba(255,255,255,0.35)',
-              borderBottom: `2px solid ${activeTab === tab ? 'var(--accent)' : 'transparent'}`,
               background: 'none',
               border: 'none',
               borderBottom: `2px solid ${activeTab === tab ? 'var(--accent)' : 'transparent'}`,
