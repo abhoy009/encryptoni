@@ -383,8 +383,8 @@ export default function App() {
                 <div className="code-block p-5" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem', lineHeight: 1.8 }}>
                   <CodeLine comment="# Clone"   cmd="git clone https://github.com/abhoy009/encryptoni" />
                   <CodeLine comment="# Build"   cmd="cd encryptoni &amp;&amp; make" />
-                  <CodeLine comment="# Encrypt" cmd="./encrypt_decrypt ./mydir --action encrypt --mode fork" />
-                  <CodeLine comment="# Decrypt" cmd="./encrypt_decrypt ./mydir --action decrypt --mode fork" />
+                  <CodeLine comment="# Encrypt" cmd="./encrypt ./mydir --mode fork" />
+                  <CodeLine comment="# Decrypt" cmd="./decrypt ./mydir --mode fork" />
                 </div>
               </div>
 
@@ -396,7 +396,7 @@ export default function App() {
                   </span>
                 </div>
                 <div className="code-block p-5" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem', lineHeight: 1.8 }}>
-                  <CodeLine comment="# 1. CLI flag"  cmd="./encrypt_decrypt ./dir --action encrypt --password mysecret" />
+                  <CodeLine comment="# 1. CLI flag"  cmd="./encrypt ./dir --password mysecret" />
                   <CodeLine comment="# 2. Env var"   cmd="export ENCRYPTONI_PASSWORD=mysecret" />
                   <CodeLine comment='# 3. .env file' cmd='echo "PASSWORD=mysecret" &gt; .env' />
                 </div>

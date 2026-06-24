@@ -1,6 +1,6 @@
 # Build targets
-encrypt_decrypt
-cryption
+encrypt
+decrypt
 
 # Object files
 *.o
@@ -14,3 +14,11 @@ cryption
 
 # OS files
 .DS_Store
+
+# IDE and Dev Environment
+.vscode/
+.idea/
+
+# Testing and Benchmarks
+benchmark_test/
+encryptoni-v*.tar.gz

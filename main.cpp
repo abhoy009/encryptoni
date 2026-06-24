@@ -7,22 +7,22 @@
 
 namespace fs = std::filesystem;
 
-void printUsage() {
-    std::cout << "Usage: ./encrypt_decrypt <directory> --action <encrypt|decrypt> [--mode <serial|fork|thread>] [--password <pass>]\n";
+void printUsage(const std::string& execName) {
+    std::cout << "Usage: ./" << execName << " <path> [--mode <serial|fork|thread>] [--password <pass>]\n";
 }
 
 int main(int argc, char* argv[]) {
+    std::string execName = fs::path(argv[0]).filename().string();
     if (argc < 2) {
-        printUsage();
+        printUsage(execName);
         return 0;
     }
 
-    std::string directory;
-    std::string action;
+    std::string targetPath;
+    std::string action = (execName.find("decrypt") != std::string::npos) ? "decrypt" : "encrypt";
     std::string modeStr = "serial";
 
     static struct option long_options[] = {
-        {"action", required_argument, 0, 'a'},
         {"mode", required_argument, 0, 'm'},
         {"password", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
@@ -31,11 +31,8 @@ int main(int argc, char* argv[]) {
 
     int opt;
     int option_index = 0;
-    while ((opt = getopt_long(argc, argv, "a:m:p:h", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "m:p:h", long_options, &option_index)) != -1) {
         switch (opt) {
-            case 'a':
-                action = optarg;
-                break;
             case 'm':
                 modeStr = optarg;
                 break;
@@ -44,22 +41,16 @@ int main(int argc, char* argv[]) {
                 break;
             case 'h':
             default:
-                printUsage();
+                printUsage(execName);
                 return 0;
         }
     }
 
     if (optind < argc) {
-        directory = argv[optind];
+        targetPath = argv[optind];
     } else {
-        std::cerr << "Error: Directory path is required.\n";
-        printUsage();
-        return 1;
-    }
-
-    if (action != "encrypt" && action != "decrypt") {
-        std::cerr << "Error: Action must be either 'encrypt' or 'decrypt'.\n";
-        printUsage();
+        std::cerr << "Error: Target path is required.\n";
+        printUsage(execName);
         return 1;
     }
 
@@ -71,36 +62,41 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        if (fs::exists(directory) && fs::is_directory(directory)) {
+        if (fs::exists(targetPath)) {
             ProcessManagement processManagement;
+            Action taskAction = (action == "encrypt") ? Action::ENCRYPT : Action::DECRYPT;
 
-            for (const auto& entry : fs::recursive_directory_iterator(directory)) {
-                if (entry.is_regular_file()) {
-                    std::string filePath = entry.path().string();
+            if (fs::is_directory(targetPath)) {
+                for (const auto& entry : fs::recursive_directory_iterator(targetPath)) {
+                    if (entry.is_regular_file()) {
+                        std::string filePath = entry.path().string();
 
-                    // Skip hidden/system files, and our temporary files
-                    if (entry.path().filename().string().rfind(".", 0) == 0 ||
-                        filePath.find(".tmp_enc") != std::string::npos ||
-                        filePath.find(".tmp_dec") != std::string::npos ||
-                        entry.path().filename() == "Makefile" ||
-                        entry.path().filename() == "encrypt_decrypt" ||
-                        entry.path().filename() == "cryption") {
-                        continue;
+                        // Skip hidden/system files, and our temporary files
+                        if (entry.path().filename().string().rfind(".", 0) == 0 ||
+                            filePath.find(".tmp_enc") != std::string::npos ||
+                            filePath.find(".tmp_dec") != std::string::npos ||
+                            entry.path().filename() == "Makefile" ||
+                            entry.path().filename() == "encrypt" ||
+                            entry.path().filename() == "decrypt") {
+                            continue;
+                        }
+
+                        auto task = std::make_unique<Task>(filePath, taskAction);
+                        processManagement.submitToQueue(std::move(task));
                     }
-
-                    Action taskAction = (action == "encrypt") ? Action::ENCRYPT : Action::DECRYPT;
-                    auto task = std::make_unique<Task>(filePath, taskAction);
-                    processManagement.submitToQueue(std::move(task));
                 }
+            } else if (fs::is_regular_file(targetPath)) {
+                auto task = std::make_unique<Task>(targetPath, taskAction);
+                processManagement.submitToQueue(std::move(task));
             }
 
-            processManagement.executeTasks(mode);
+            return processManagement.executeTasks(mode) > 0 ? 1 : 0;
         } else {
-            std::cout << "Invalid directory path!" << std::endl;
+            std::cout << "Invalid path!" << std::endl;
+            return 1;
         }
     } catch (const fs::filesystem_error& ex) {
         std::cout << "Filesystem error: " << ex.what() << std::endl;
+        return 1;
     }
-
-    return 0;
 }

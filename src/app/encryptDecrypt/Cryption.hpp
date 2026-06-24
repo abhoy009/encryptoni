@@ -3,8 +3,10 @@
 
 #include <string>
 
+#include "../processes/Task.hpp"
+
 bool encryptFile(const std::string& inputPath, const std::string& outputPath, const std::string& password);
 bool decryptFile(const std::string& inputPath, const std::string& outputPath, const std::string& password);
-int executeCryption(const std::string& taskData);
+int executeCryption(const Task& task);
 
 #endif

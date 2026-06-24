@@ -16,7 +16,7 @@ class ProcessManagement
 public:
     ProcessManagement();
     bool submitToQueue(std::unique_ptr<Task> task);
-    void executeTasks(ExecutionMode mode);
+    int executeTasks(ExecutionMode mode);
 
 private:
     std::queue<std::unique_ptr<Task>> taskQueue;

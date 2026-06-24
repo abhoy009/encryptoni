@@ -43,7 +43,7 @@ void* threadWorker(void* arg) {
         }
 
         const auto& task = (*args->tasks)[taskIdx];
-        int result = executeCryption(task->toString());
+        int result = executeCryption(*task);
         if (result == 0) {
             args->successCount->fetch_add(1);
         } else {
@@ -60,10 +60,10 @@ bool ProcessManagement::submitToQueue(std::unique_ptr<Task> task) {
     return true;
 }
 
-void ProcessManagement::executeTasks(ExecutionMode mode) {
+int ProcessManagement::executeTasks(ExecutionMode mode) {
     if (taskQueue.empty()) {
         std::cout << "No tasks to execute." << std::endl;
-        return;
+        return 0;
     }
 
     // Move tasks from queue to vector for O(1) random access
@@ -82,7 +82,7 @@ void ProcessManagement::executeTasks(ExecutionMode mode) {
 
         for (size_t i = 0; i < totalTasks; ++i) {
             std::cout << "Processing file (" << (i + 1) << "/" << totalTasks << "): " << tasks[i]->filePath << std::endl;
-            int result = executeCryption(tasks[i]->toString());
+            int result = executeCryption(*tasks[i]);
             if (result == 0) {
                 successCount++;
             } else {
@@ -93,6 +93,7 @@ void ProcessManagement::executeTasks(ExecutionMode mode) {
         std::cout << "\nSerial Execution Completed." << std::endl;
         std::cout << "Successfully processed: " << successCount << " files." << std::endl;
         std::cout << "Failed: " << failureCount << " files." << std::endl;
+        return failureCount;
 
     } else if (mode == ExecutionMode::MULTIPROCESSING) {
         std::cout << "Executing tasks via Multiprocessing (fork + shared memory)..." << std::endl;
@@ -111,8 +112,7 @@ void ProcessManagement::executeTasks(ExecutionMode mode) {
             for (auto& task : tasks) {
                 taskQueue.push(std::move(task));
             }
-            executeTasks(ExecutionMode::SERIAL);
-            return;
+            return executeTasks(ExecutionMode::SERIAL);
         }
 
         // Initialize atomic variables in mapped shared memory
@@ -141,7 +141,7 @@ void ProcessManagement::executeTasks(ExecutionMode mode) {
                 sharedState->successCount.~atomic();
                 sharedState->failureCount.~atomic();
                 munmap(sharedState, sizeof(SharedState));
-                return;
+                return totalTasks;
             } else if (pid == 0) {
                 // Child worker process loop
                 while (true) {
@@ -149,7 +149,7 @@ void ProcessManagement::executeTasks(ExecutionMode mode) {
                     if (taskIdx >= totalTasks) {
                         break;
                     }
-                    int result = executeCryption(tasks[taskIdx]->toString());
+                    int result = executeCryption(*tasks[taskIdx]);
                     if (result == 0) {
                         sharedState->successCount.fetch_add(1);
                     } else {
@@ -173,10 +173,12 @@ void ProcessManagement::executeTasks(ExecutionMode mode) {
         std::cout << "Failed: " << sharedState->failureCount.load() << " files." << std::endl;
 
         // Destruct and unmap
+        int fails = sharedState->failureCount.load();
         sharedState->nextTaskIndex.~atomic();
         sharedState->successCount.~atomic();
         sharedState->failureCount.~atomic();
         munmap(sharedState, sizeof(SharedState));
+        return fails;
 
     } else if (mode == ExecutionMode::MULTITHREADING) {
         std::cout << "Executing tasks via Multithreading (pthread)..." << std::endl;
@@ -212,5 +214,7 @@ void ProcessManagement::executeTasks(ExecutionMode mode) {
         std::cout << "\nMultithreading Execution Completed." << std::endl;
         std::cout << "Successfully processed: " << successCount.load() << " files." << std::endl;
         std::cout << "Failed: " << failureCount.load() << " files." << std::endl;
+        return failureCount.load();
     }
+    return 0;
 }

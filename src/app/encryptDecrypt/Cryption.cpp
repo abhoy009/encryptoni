@@ -1,6 +1,6 @@
 #include "Cryption.hpp"
 #include "../processes/Task.hpp"
-#include "../fileHandling/ReadEnv.cpp"
+#include "../fileHandling/ReadEnv.hpp"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -16,6 +16,13 @@ constexpr size_t TAG_SIZE = 16;
 constexpr size_t KEY_SIZE = 32; // 256 bits for AES-256
 constexpr int PBKDF2_ITERATIONS = 100000;
 constexpr size_t CHUNK_SIZE = 64 * 1024; // 64 KB chunks
+
+struct KeyCleaner {
+    unsigned char* key;
+    size_t size;
+    KeyCleaner(unsigned char* k, size_t s) : key(k), size(s) {}
+    ~KeyCleaner() { OPENSSL_cleanse(key, size); }
+};
 
 bool encryptFile(const std::string& inputPath, const std::string& outputPath, const std::string& password) {
     std::ifstream inFile(inputPath, std::ios::binary);
@@ -48,6 +55,7 @@ bool encryptFile(const std::string& inputPath, const std::string& outputPath, co
 
     // Derive key using PBKDF2
     unsigned char derivedKey[KEY_SIZE];
+    KeyCleaner cleaner(derivedKey, KEY_SIZE);
     if (PKCS5_PBKDF2_HMAC(password.c_str(), password.length(),
                           salt, SALT_SIZE,
                           PBKDF2_ITERATIONS,
@@ -150,6 +158,7 @@ bool decryptFile(const std::string& inputPath, const std::string& outputPath, co
 
     // Derive key using PBKDF2
     unsigned char derivedKey[KEY_SIZE];
+    KeyCleaner cleaner(derivedKey, KEY_SIZE);
     if (PKCS5_PBKDF2_HMAC(password.c_str(), password.length(),
                           salt, SALT_SIZE,
                           PBKDF2_ITERATIONS,
@@ -233,8 +242,7 @@ bool decryptFile(const std::string& inputPath, const std::string& outputPath, co
     }
 }
 
-int executeCryption(const std::string& taskData) {
-    Task task = Task::fromString(taskData);
+int executeCryption(const Task& task) {
     ReadEnv env;
     std::string rawKey = env.getenv();
 

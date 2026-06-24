@@ -12,35 +12,35 @@ echo "Total benchmark data size: 1 GB (200 files of 5 MB each)"
 # Benchmark Serial Mode
 echo -e "\n=== Benchmarking Serial Mode ==="
 start_time=$(date +%s)
-echo -e "benchmark_test\nencrypt\nserial" | ./encrypt_decrypt > /dev/null
+./encrypt benchmark_test --mode serial > /dev/null
 end_time=$(date +%s)
 serial_enc_time=$((end_time - start_time))
 echo "Serial Encryption Time: ${serial_enc_time} seconds"
 
 # Restore files for next test
-echo -e "benchmark_test\ndecrypt\nserial" | ./encrypt_decrypt > /dev/null
+./decrypt benchmark_test --mode serial > /dev/null
 
 # Benchmark Multiprocessing Mode (fork)
 echo -e "\n=== Benchmarking Multiprocessing Mode (fork) ==="
 start_time=$(date +%s)
-echo -e "benchmark_test\nencrypt\nfork" | ./encrypt_decrypt > /dev/null
+./encrypt benchmark_test --mode fork > /dev/null
 end_time=$(date +%s)
 fork_enc_time=$((end_time - start_time))
 echo "Multiprocessing Encryption Time: ${fork_enc_time} seconds"
 
 # Restore files for next test
-echo -e "benchmark_test\ndecrypt\nfork" | ./encrypt_decrypt > /dev/null
+./decrypt benchmark_test --mode fork > /dev/null
 
 # Benchmark Multithreading Mode (thread)
 echo -e "\n=== Benchmarking Multithreading Mode (thread) ==="
 start_time=$(date +%s)
-echo -e "benchmark_test\nencrypt\nthread" | ./encrypt_decrypt > /dev/null
+./encrypt benchmark_test --mode thread > /dev/null
 end_time=$(date +%s)
 thread_enc_time=$((end_time - start_time))
 echo "Multithreading Encryption Time: ${thread_enc_time} seconds"
 
 # Restore files
-echo -e "benchmark_test\ndecrypt\nthread" | ./encrypt_decrypt > /dev/null
+./decrypt benchmark_test --mode thread > /dev/null
 
 # Cleanup
 echo -e "\nCleaning up benchmark directory..."

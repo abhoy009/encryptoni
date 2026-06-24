@@ -18,8 +18,8 @@ class Encryptoni < Formula
     system "make", "OPENSSL_PREFIX=#{openssl.opt_prefix}"
 
     # Install both binaries to Homebrew's bin prefix
-    bin.install "encrypt_decrypt"
-    bin.install "cryption"
+    bin.install "encrypt"
+    bin.install "decrypt"
 
     # Install man page
     man1.install "man/encryptoni.1"
@@ -33,14 +33,14 @@ class Encryptoni < Formula
         3. A .env file in the current directory containing: PASSWORD=<yourpass>
 
       Quick start:
-        encrypt_decrypt ./my_folder --action encrypt --mode fork --password mypass
-        cryption "path/to/file.txt,ENCRYPT" --password mypass
+        encrypt ./my_folder --mode fork --password mypass
+        encrypt "path/to/file.txt" --password mypass
     EOS
   end
 
   test do
     # Verify the binary runs and prints usage cleanly (exit 0 with no args shows usage)
-    assert_match "Usage", shell_output("#{bin}/encrypt_decrypt 2>&1", 0)
-    assert_match "Usage", shell_output("#{bin}/cryption 2>&1", 0)
+    assert_match "Usage", shell_output("#{bin}/encrypt 2>&1", 0)
+    assert_match "Usage", shell_output("#{bin}/decrypt 2>&1", 0)
   end
 end
