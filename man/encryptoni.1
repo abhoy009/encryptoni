@@ -1,0 +1,209 @@
+.\" Manpage for encryptoni
+.\" Contact: github.com/abhoy009/encryptoni
+.TH ENCRYPTONI 1 "June 2025" "encryptoni 1.0.0" "User Commands"
+
+.SH NAME
+encrypt_decrypt, cryption \- parallel file encryption engine using AES-256-GCM
+
+.SH SYNOPSIS
+.B encrypt_decrypt
+.I <directory>
+.B \-\-action
+.I <encrypt|decrypt>
+.RB [ \-\-mode
+.IR serial|fork|thread ]
+.RB [ \-\-password
+.IR password ]
+.PP
+.B cryption
+.I "<filepath>,<ENCRYPT|DECRYPT>"
+.RB [ \-\-password
+.IR password ]
+
+.SH DESCRIPTION
+.B encryptoni
+is a parallel file encryption suite that encrypts and decrypts files using
+industry-standard
+.B AES-256-GCM
+authenticated encryption with
+.B PBKDF2
+key derivation (100,000 iterations, SHA-256).
+.PP
+.B encrypt_decrypt
+operates on all files in a directory recursively.
+It supports three execution modes: serial, fork-based multiprocessing, and
+POSIX thread-based multithreading.
+.PP
+.B cryption
+operates on a single file. The action (ENCRYPT or DECRYPT) is embedded in the
+argument string alongside the file path.
+.PP
+All encrypted files are written atomically via a temp-file-and-rename strategy.
+A 44-byte header is prepended: 16-byte salt, 12-byte IV, 16-byte GCM
+authentication tag, followed by the ciphertext. Decryption verifies the GCM tag
+before committing the plaintext; a tampered ciphertext causes an explicit failure
+with no data written.
+
+.SH OPTIONS
+.SS encrypt_decrypt options
+
+.TP
+.I <directory>
+Path to the directory to process. All regular files are included recursively.
+Hidden files (dot-prefixed) and temporary files (\fB.tmp_enc\fR, \fB.tmp_dec\fR)
+are skipped automatically.
+
+.TP
+.BR \-\-action " " \fI<encrypt|decrypt>\fR
+Required. Selects the operation to perform.
+
+.TP
+.BR \-\-mode " " \fI<serial|fork|thread>\fR
+Optional. Selects the execution mode. Default is
+.BR serial .
+.RS
+.TP
+.B serial
+Process files sequentially on the main thread.
+.TP
+.B fork
+Spawn worker processes using
+.BR fork (2).
+Uses
+.BR mmap (2)
+with \fBMAP_SHARED|MAP_ANONYMOUS\fR and lock-free atomic counters for
+inter-process task coordination. Achieves the highest throughput on multi-core
+machines (4x speedup vs. serial on a 1\~GB benchmark).
+.TP
+.B thread
+Spawn worker threads using
+.BR pthread_create (3).
+Uses a
+.BR pthread_mutex_t
+for task index coordination. Achieves approximately 1.3x speedup vs. serial.
+.RE
+
+.TP
+.BR \-\-password " " \fI<password>\fR
+Supply the encryption/decryption password directly on the command line.
+This sets the
+.B ENCRYPTONI_PASSWORD
+environment variable for the duration of the process.
+See
+.B PASSWORD RESOLUTION
+below.
+
+.TP
+.BR \-\-help
+Print usage information and exit.
+
+.SS cryption options
+
+.TP
+.I "<filepath>,<ENCRYPT|DECRYPT>"
+A single comma-separated argument containing the file path and action.
+Example: \fB"./secret.txt,ENCRYPT"\fR
+
+.TP
+.BR \-\-password " " \fI<password>\fR
+Same semantics as in
+.BR encrypt_decrypt .
+
+.TP
+.BR \-\-help
+Print usage information and exit.
+
+.SH PASSWORD RESOLUTION
+Passwords are resolved in the following priority order:
+
+.IP "1." 4
+.B \-\-password
+flag passed on the command line.
+
+.IP "2."
+.B ENCRYPTONI_PASSWORD
+environment variable (set in the calling shell or exported upstream).
+
+.IP "3."
+A
+.B .env
+file in the current working directory containing a line of the form:
+.PP
+.RS 8
+.B PASSWORD=mysecretpassword
+.RE
+
+.PP
+If no password is found by any of the above methods, the program exits with
+an error.
+
+.SH ENVIRONMENT
+.TP
+.B ENCRYPTONI_PASSWORD
+Encryption/decryption password. Overrides \fB.env\fR file lookup.
+
+.SH FILES
+.TP
+.B .env
+Optional file in the current working directory.
+Must contain a line of the form \fBPASSWORD=<value>\fR.
+
+.SH EXAMPLES
+Encrypt all files in \fB./documents\fR using 4-core fork mode:
+.PP
+.RS
+.B encrypt_decrypt ./documents --action encrypt --mode fork --password s3cr3t
+.RE
+
+.PP
+Decrypt the same directory serially:
+.PP
+.RS
+.B encrypt_decrypt ./documents --action decrypt --mode serial
+.RE
+
+.PP
+Encrypt a single file with
+.BR cryption :
+.PP
+.RS
+.B cryption "./report.pdf,ENCRYPT" --password s3cr3t
+.RE
+
+.PP
+Decrypt a single file:
+.PP
+.RS
+.B cryption "./report.pdf.enc,DECRYPT" --password s3cr3t
+.RE
+
+.PP
+Use environment variable instead of flag:
+.PP
+.RS
+.B export ENCRYPTONI_PASSWORD=s3cr3t
+.br
+.B encrypt_decrypt ./photos --action encrypt --mode thread
+.RE
+
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+An error occurred (invalid arguments, filesystem error, or authentication
+failure during decryption).
+
+.SH SEE ALSO
+.BR openssl (1),
+.BR make (1),
+.BR fork (2),
+.BR mmap (2),
+.BR pthread_create (3)
+
+.SH BUGS
+Report bugs at: \fBhttps://github.com/abhoy009/encryptoni/issues\fR
+
+.SH AUTHORS
+Abhoy Das <\fIgithub.com/abhoy009\fR>
