@@ -4,7 +4,7 @@ import BenchmarkChart from './components/BenchmarkChart';
 import ArchDiagram from './components/ArchDiagram';
 import ScrollReveal from './components/ScrollReveal';
 
-const GITHUB_REPO = 'https://github.com/<USERNAME>/encryptoni';
+const GITHUB_REPO = 'https://github.com/abhoy009/encryptoni';
 
 const FEATURES = [
   {
