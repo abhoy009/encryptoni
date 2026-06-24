@@ -1,5 +1,11 @@
 CXX = g++
-OPENSSL_PREFIX = $(shell brew --prefix openssl@3 2>/dev/null || echo "/opt/homebrew/opt/openssl")
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    OPENSSL_PREFIX = /usr
+else
+    OPENSSL_PREFIX = $(shell brew --prefix openssl@3 2>/dev/null || echo "/opt/homebrew/opt/openssl")
+endif
 CXXFLAGS = -std=c++17 -g -Wall -I. -Isrc/app/encryptDecrypt -Isrc/app/fileHandling -Isrc/app/processes -I$(OPENSSL_PREFIX)/include
 LDFLAGS = -L$(OPENSSL_PREFIX)/lib -lcrypto
 

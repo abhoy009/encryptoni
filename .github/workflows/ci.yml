@@ -1,0 +1,67 @@
+name: CI/CD Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-14, macos-13, ubuntu-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: brew install openssl@3
+
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+    - name: Build
+      run: |
+        make clean
+        make
+
+    - name: Archive binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: encryptoni-binaries-${{ matrix.os }}
+        path: |
+          encrypt_decrypt
+          cryption
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Prepare Release Assets
+      run: |
+        mkdir -p release_assets
+        for os in macos-14 macos-13 ubuntu-latest; do
+          cp artifacts/encryptoni-binaries-${os}/encrypt_decrypt release_assets/encrypt_decrypt-${os}
+          cp artifacts/encryptoni-binaries-${os}/cryption release_assets/cryption-${os}
+        done
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: release_assets/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
