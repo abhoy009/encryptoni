@@ -41,8 +41,8 @@ Encryptoni encrypts and decrypts files using **AES-256-GCM** authenticated encry
 ### Homebrew (macOS)
 
 ```bash
-brew tap abhoy009/encryptoni
-brew install encryptoni
+brew tap abhoy009/encryptoni https://github.com/abhoy009/encryptoni
+brew install abhoy009/encryptoni/encryptoni
 ```
 
 ### Build from Source

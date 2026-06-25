@@ -33,6 +33,10 @@ class Encryptoni < Formula
       Quick start:
         encrypt ./my_folder --mode fork --password mypass
         encrypt "path/to/file.txt" --password mypass
+
+      Installed via:
+        brew tap abhoy009/encryptoni https://github.com/abhoy009/encryptoni
+        brew install abhoy009/encryptoni/encryptoni
     EOS
   end
 
