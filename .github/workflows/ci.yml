@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, macos-13, ubuntu-latest]
+        os: [macos-14, ubuntu-latest]
     
     steps:
     - uses: actions/checkout@v4
@@ -37,8 +37,8 @@ jobs:
       with:
         name: encryptoni-binaries-${{ matrix.os }}
         path: |
-          encrypt_decrypt
-          cryption
+          encrypt
+          decrypt
 
   release:
     name: Create GitHub Release
@@ -54,9 +54,9 @@ jobs:
     - name: Prepare Release Assets
       run: |
         mkdir -p release_assets
-        for os in macos-14 macos-13 ubuntu-latest; do
-          cp artifacts/encryptoni-binaries-${os}/encrypt_decrypt release_assets/encrypt_decrypt-${os}
-          cp artifacts/encryptoni-binaries-${os}/cryption release_assets/cryption-${os}
+        for os in macos-14 ubuntu-latest; do
+          cp artifacts/encryptoni-binaries-${os}/encrypt release_assets/encrypt-${os}
+          cp artifacts/encryptoni-binaries-${os}/decrypt release_assets/decrypt-${os}
         done
 
     - name: Release
