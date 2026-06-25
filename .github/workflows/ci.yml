@@ -65,3 +65,46 @@ jobs:
         files: release_assets/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-formula:
+    name: Update Homebrew Formula
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Compute sha256 and update formula
+      run: |
+        VERSION="${GITHUB_REF_NAME}"
+        TARBALL_URL="https://github.com/${{ github.repository }}/archive/refs/tags/${VERSION}.tar.gz"
+
+        # Wait briefly for GitHub to make the tarball available
+        sleep 10
+
+        SHA256=$(curl -sL "${TARBALL_URL}" | shasum -a 256 | awk '{print $1}')
+
+        echo "Tag:     ${VERSION}"
+        echo "URL:     ${TARBALL_URL}"
+        echo "SHA256:  ${SHA256}"
+
+        # Strip leading 'v' to get plain version number (e.g. v1.0.1 → 1.0.1)
+        PLAIN_VERSION="${VERSION#v}"
+
+        # Patch Formula/encryptoni.rb in-place
+        sed -i "s|version \".*\"|version \"${PLAIN_VERSION}\"|" Formula/encryptoni.rb
+        sed -i "s|sha256 \".*\"|sha256 \"${SHA256}\"|"         Formula/encryptoni.rb
+
+        echo "--- Updated formula ---"
+        cat Formula/encryptoni.rb
+
+    - name: Commit updated formula
+      run: |
+        git config user.name  "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add Formula/encryptoni.rb
+        git diff --cached --quiet || git commit -m "chore: update formula to ${GITHUB_REF_NAME}"
+        git push origin main
