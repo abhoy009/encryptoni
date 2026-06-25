@@ -1,8 +1,8 @@
 class Encryptoni < Formula
   desc "Parallel file encryption engine using AES-256-GCM + PBKDF2"
   homepage "https://github.com/abhoy009/encryptoni"
-  url "https://github.com/abhoy009/encryptoni/archive/refs/tags/v#{version}.tar.gz"
   version "1.0.1"
+  url "https://github.com/abhoy009/encryptoni/archive/refs/tags/v#{version}.tar.gz"
   sha256 "efa14dff6d762951a01ffb2941821d26a04d1f7d7c367654add2f690670f7c88"
   license "MIT"
   head "https://github.com/abhoy009/encryptoni.git", branch: "main"
